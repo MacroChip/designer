@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ColorResult, SketchPicker } from 'react-color';
 
 const Popup = () => {
-  const [count, setCount] = useState(0);
   const [currentURL, setCurrentURL] = useState<string>();
+  const [color, setColor] = useState('');
 
-  useEffect(() => {
-    chrome.action.setBadgeText({ text: count.toString() });
-  }, [count]);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -22,7 +20,7 @@ const Popup = () => {
         chrome.tabs.sendMessage(
           tab.id,
           {
-            color: "#555555",
+            color,
           },
           (msg) => {
             console.log("result message:", msg);
@@ -32,18 +30,16 @@ const Popup = () => {
     });
   };
 
+  const handleChangeComplete = (color: ColorResult, event: any) => {
+    setColor(color.hex);
+  };
+
   return (
     <>
+      <SketchPicker color={ color } onChangeComplete={ handleChangeComplete }/>
       <ul style={{ minWidth: "700px" }}>
         <li>Current URL: {currentURL}</li>
-        <li>Current Time: {new Date().toLocaleTimeString()}</li>
       </ul>
-      <button
-        onClick={() => setCount(count + 1)}
-        style={{ marginRight: "5px" }}
-      >
-        count up
-      </button>
       <button onClick={changeBackground}>change background</button>
     </>
   );
