@@ -6,6 +6,25 @@ import hexRgb from 'hex-rgb';
 const Popup = () => {
   const [findColor, setFindColor] = useState('rgb(255, 224, 27)');
   const [replaceColor, setReplaceColor] = useState('');
+  const [designMode, setDesignMode] = useState('off');
+
+  useEffect(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        const tab = tabs[0];
+        if (tab.id) {
+          chrome.tabs.sendMessage(
+            tab.id,
+            {
+              getDesignMode: true,
+            },
+            (msg) => {
+              console.log("result message:", msg);
+              setDesignMode(msg.existingDesignMode);
+            }
+          );
+        }
+      });
+  });
 
   const startEyeDropper = async () => {
     const eyeDropper = new window.EyeDropper();
@@ -49,6 +68,32 @@ const Popup = () => {
     setReplaceColor(`rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`);
   };
 
+  const sendDesignMode = (mode: string) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        const tab = tabs[0];
+        if (tab.id) {
+          chrome.tabs.sendMessage(
+            tab.id,
+            {
+              designMode: mode
+            },
+            (msg) => {
+              console.log("result message:", msg);
+              setDesignMode(msg.designMode);
+            }
+          );
+        }
+      });
+  };
+
+  const onToggleTextEditMode = (event: any) => {
+    if (event.target.checked) {
+        sendDesignMode('on');
+    } else {
+        sendDesignMode('off');
+    }
+  };
+
   const buttonStyle = {
     marginBottom: "12px",
     cursor: "pointer",
@@ -78,6 +123,10 @@ const Popup = () => {
             </div>
         </div>
         <button style={{...buttonStyle, width: "80%", marginLeft: "10px"}} onClick={changeBackground}>Find and Replace all element colors</button>
+        <div style={{ marginLeft: "7px" }}>
+            <input checked={designMode == 'on' ? true : false} type="checkbox" onChange={onToggleTextEditMode} />
+            <label style={{ fontSize: "20px" }}>Text Edit Mode</label>
+        </div>
     </>
   );
 };
