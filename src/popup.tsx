@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ColorResult, SketchPicker } from 'react-color';
+import hexRgb from 'hex-rgb';
 
 const Popup = () => {
-  const [currentURL, setCurrentURL] = useState<string>();
   const [findColor, setFindColor] = useState('rgb(255, 224, 27)');
   const [replaceColor, setReplaceColor] = useState('');
 
-
-  useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      setCurrentURL(tabs[0].url);
-    });
-  }, []);
+  const startEyeDropper = async () => {
+    const eyeDropper = new window.EyeDropper();
+    try {
+        const result: {sRGBHex: string} = await eyeDropper.open(); //doesn't get accurate colors on my main monitor
+        console.log(result);
+        const rgb = hexRgb(result.sRGBHex);
+        console.log(rgb);
+        const rgbString = `rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`;
+        console.log(rgbString);
+        setFindColor(rgbString);
+    } catch (err) {
+        console.log(err)
+    }
+  };
 
   const changeBackground = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -41,16 +49,35 @@ const Popup = () => {
     setReplaceColor(`rgb(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`);
   };
 
+  const buttonStyle = {
+    marginBottom: "12px",
+    cursor: "pointer",
+    height: "40px",
+    width: "150px",
+  };
+
+  const areaStyle = {
+    margin: "10px",
+    border: "solid grey",
+    borderRadius: "5px",
+    padding: "10px",
+  };
+
   return (
     <>
-      <h3>Find Color</h3>
-      <SketchPicker color={ findColor } onChangeComplete={ handleFindColorChangeComplete }/>
-      <h3>Replace Color</h3>
-      <SketchPicker color={ replaceColor } onChangeComplete={ handleReplaceColorChangeComplete }/>
-      <ul style={{ minWidth: "700px" }}>
-        <li>Current URL: {currentURL}</li>
-      </ul>
-      <button onClick={changeBackground}>Find and Replace all background colors</button>
+        <div style={{ display: "flex", marginBottom: "12px" }}>
+            <div style={areaStyle}>
+                <h3>Find Color</h3>
+                <button style={{...buttonStyle, width: "100%"}} onClick={startEyeDropper}>Pick Color From Page</button>
+                <SketchPicker color={ findColor } onChangeComplete={ handleFindColorChangeComplete }/>
+            </div>
+            <div style={areaStyle}>
+                <h3>Replace Color</h3>
+                <div style={{ height: "52px" }}/>
+                <SketchPicker color={ replaceColor } onChangeComplete={ handleReplaceColorChangeComplete }/>
+            </div>
+        </div>
+        <button style={{...buttonStyle, width: "80%", marginLeft: "10px"}} onClick={changeBackground}>Find and Replace all element colors</button>
     </>
   );
 };
