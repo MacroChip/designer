@@ -4,7 +4,7 @@ import { ColorResult, SketchPicker } from 'react-color';
 import hexRgb from 'hex-rgb';
 
 const Popup = () => {
-  const [findColor, setFindColor] = useState('rgb(255, 224, 27)');
+  const [findColor, setFindColor] = useState('');
   const [replaceColor, setReplaceColor] = useState('');
   const [designMode, setDesignMode] = useState('off');
 
